@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Analytics</title>
+  <meta name="theme-color" content="#07090d" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07090d;
+      --sidebar: #0a0d12;
+      --surface: #0e1219;
+      --surface-2: #121722;
+      --surface-3: #171d29;
+      --border: rgba(255, 255, 255, 0.075);
+      --border-strong: rgba(255, 255, 255, 0.13);
+      --text: #f4f7fb;
+      --muted: #8a94a5;
+      --faint: #596274;
+      --green: #55e6a5;
+      --blue: #69a8ff;
+      --violet: #9b8cff;
+      --orange: #ffb86c;
+      --red: #ff747f;
+      --sidebar-width: 244px;
+      --radius: 16px;
+      --mono: "JetBrains Mono", monospace;
+      --sans: "DM Sans", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    ::selection { background: rgba(85, 230, 165, 0.25); }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #252c38; border-radius: 20px; border: 2px solid transparent; background-clip: padding-box; }
+
+    .app { min-height: 100vh; }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: rgba(10, 13, 18, 0.96);
+      backdrop-filter: blur(18px);
+      padding: 22px 16px 18px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px 22px;
+    }
+    .brand-mark {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, rgba(85, 230, 165, 0.18), rgba(105, 168, 255, 0.12));
+      border: 1px solid rgba(85, 230, 165, 0.22);
+      box-shadow: inset 0 0 24px rgba(85, 230, 165, 0.05);
+    }
+    .brand-mark::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 16px rgba(85, 230, 165, 0.7);
+    }
+    .brand strong { display: block; font-size: 15px; letter-spacing: -0.02em; }
+    .brand span { display: block; margin-top: 2px; color: var(--faint); font: 500 10px/1.2 var(--mono); }
+
+    .nav-label {
+      padding: 10px 11px 8px;
+      color: var(--faint);
+      font: 600 9px/1 var(--mono);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .nav { display: grid; gap: 4px; }
+    .nav-link {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 11px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: var(--muted);
+      background: transparent;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 160ms ease;
+    }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,.035); }
+    .nav-link.active {
+      color: var(--text);
+      border-color: var(--border);
+      background: linear-gradient(90deg, rgba(85, 230, 165, 0.11), rgba(255,255,255,.025));
+    }
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      color: currentColor;
+      flex: 0 0 auto;
+    }
+    .nav-icon svg { width: 17px; height: 17px; stroke: currentColor; }
+
+    .sidebar-bottom { margin-top: auto; display: grid; gap: 10px; }
+    .api-card {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .api-state {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .state-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 10px rgba(255, 184, 108, .4);
+    }
+    .state-dot.online { background: var(--green); box-shadow: 0 0 10px rgba(85, 230, 165, .5); }
+    .api-url {
+      margin-top: 8px;
+      color: var(--faint);
+      font: 500 9px/1.5 var(--mono);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .main {
+      margin-left: var(--sidebar-width);
+      min-width: 0;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px 28px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 9, 13, .86);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .menu-button { display: none; }
+    .page-title h1 { margin: 0; font-size: 19px; letter-spacing: -0.03em; }
+    .page-title p { margin: 3px 0 0; color: var(--faint); font-size: 11px; }
+    .topbar-actions { display: flex; align-items: center; gap: 9px; }
+
+    .button {
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--muted);
+      height: 38px;
+      padding: 0 13px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      transition: 160ms ease;
+    }
+    .button:hover { color: var(--text); border-color: rgba(255,255,255,.2); background: var(--surface-2); }
+    .button.primary {
+      color: #04120d;
+      border-color: var(--green);
+      background: var(--green);
+    }
+    .button.primary:hover { background: #70edb7; }
+    .button.icon-only { width: 38px; padding: 0; }
+    .button svg { width: 15px; height: 15px; stroke: currentColor; }
+    .refresh-icon.spinning { animation: spin 700ms linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .content {
+      width: min(1580px, 100%);
+      margin: 0 auto;
+      padding: 24px 28px 50px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .range-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .range-tabs {
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .range-button {
+      height: 30px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--faint);
+      cursor: pointer;
+      font: 600 10px/1 var(--mono);
+    }
+    .range-button:hover { color: var(--text); }
+    .range-button.active { color: var(--text); background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--border); }
+    .load-status { color: var(--faint); font: 500 10px/1.4 var(--mono); }
+    .load-status.error { color: var(--red); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      position: relative;
+      min-height: 128px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(255,255,255,.022), transparent 70%), var(--surface);
+      overflow: hidden;
+    }
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      right: -40px;
+      bottom: -50px;
+      background: var(--metric-glow, rgba(85,230,165,.16));
+      filter: blur(25px);
+      pointer-events: none;
+    }
+    .metric-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .metric-label { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .metric-icon {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--metric-color, var(--green));
+      background: rgba(255,255,255,.025);
+    }
+    .metric-icon svg { width: 14px; height: 14px; stroke: currentColor; }
+    .metric-value { margin-top: 17px; font-size: clamp(24px, 2vw, 32px); line-height: 1; font-weight: 700; letter-spacing: -0.055em; }
+    .metric-sub { margin-top: 9px; color: var(--faint); font: 500 9px/1.35 var(--mono); }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(300px, .75fr);
+      gap: 18px;
+    }
+    .grid-half {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .panel {
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .panel-head {
+      min-height: 62px;
+      padding: 14px 17px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .panel-title { min-width: 0; }
+    .panel-title h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+    .panel-title p { margin: 4px 0 0; color: var(--faint); font: 500 9px/1.3 var(--mono); }
+    .panel-body { padding: 17px; }
+    .panel-tools { display: flex; align-items: center; gap: 7px; }
+
+    .metric-switch {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #090c11;
+    }
+    .metric-switch button {
+      height: 25px;
+      padding: 0 9px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--faint);
+      font: 600 9px/1 var(--mono);
+      cursor: pointer;
+    }
+    .metric-switch button.active { color: var(--text); background: var(--surface-3); }
+
+    .chart-shell { position: relative; height: 318px; }
+    .chart-shell svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .chart-grid-line { stroke: rgba(255,255,255,.055); stroke-width: 1; }
+    .chart-axis-label { fill: var(--faint); font: 500 9px var(--mono); }
+    .chart-tooltip {
+      position: absolute;
+      z-index: 5;
+      min-width: 118px;
+      padding: 9px 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 9px;
+      background: rgba(17, 22, 31, .96);
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 10px));
+      transition: opacity 100ms ease;
+    }
+    .chart-tooltip.show { opacity: 1; }
+    .tooltip-label { color: var(--faint); font: 500 9px/1.2 var(--mono); }
+    .tooltip-value { margin-top: 5px; font-size: 15px; font-weight: 700; }
+
+    .device-layout {
+      display: grid;
+      grid-template-columns: 142px minmax(0, 1fr);
+      gap: 20px;
+      align-items: center;
+      min-height: 318px;
+    }
+    .donut {
+      --desktop: 0deg;
+      --tablet: 0deg;
+      width: 142px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      position: relative;
+      background: conic-gradient(
+        var(--green) 0 var(--desktop),
+        var(--blue) var(--desktop) calc(var(--desktop) + var(--tablet)),
+        var(--violet) calc(var(--desktop) + var(--tablet)) 360deg
+      );
+      box-shadow: inset 0 0 30px rgba(255,255,255,.04);
+    }
+    .donut::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+    .donut-center strong { font-size: 22px; line-height: 1; letter-spacing: -0.05em; }
+    .donut-center span { margin-top: 6px; color: var(--faint); font: 500 8px/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+    .legend { display: grid; gap: 13px; }
+    .legend-row { display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 9px; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .legend-name { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: capitalize; }
+    .legend-value { font: 600 10px/1 var(--mono); }
+
+    .rank-list { display: grid; gap: 2px; }
+    .rank-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 7px 9px;
+      border-radius: 9px;
+      transition: background 140ms ease;
+    }
+    .rank-row:hover { background: rgba(255,255,255,.025); }
+    .rank-number { color: var(--faint); font: 500 9px/1 var(--mono); }
+    .rank-main { min-width: 0; }
+    .rank-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #dbe1ea; font-size: 11px; font-weight: 600; }
+    .rank-track { height: 3px; margin-top: 7px; overflow: hidden; border-radius: 10px; background: rgba(255,255,255,.05); }
+    .rank-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--blue)); }
+    .rank-value { color: var(--muted); font: 600 9px/1.3 var(--mono); text-align: right; }
+
+    .heatmap-stage {
+      position: relative;
+      aspect-ratio: 16 / 8.5;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+        #090c11;
+      background-size: 4.166% 7.142%;
+    }
+    .heatmap-stage::before {
+      content: "PORTFOLIO VIEWPORT";
+      position: absolute;
+      left: 12px;
+      top: 11px;
+      z-index: 2;
+      color: rgba(255,255,255,.18);
+      font: 600 8px/1 var(--mono);
+      letter-spacing: .16em;
+      pointer-events: none;
+    }
+    #heatmapCanvas { width: 100%; height: 100%; display: block; }
+    .heatmap-footer {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--faint);
+      font: 500 9px/1.3 var(--mono);
+    }
+    .heat-scale { display: flex; align-items: center; gap: 7px; }
+    .heat-gradient { width: 80px; height: 5px; border-radius: 10px; background: linear-gradient(90deg, rgba(105,168,255,.3), #69a8ff, #ffb86c, #ff747f); }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tab-button {
+      height: 29px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab-button.active { color: var(--text); background: var(--surface-3); border-color: var(--border); }
+    .table-panel { display: none; }
+    .table-panel.active { display: block; }
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th {
+      height: 41px;
+      padding: 0 15px;
+      color: var(--faint);
+      text-align: left;
+      font: 600 8px/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      background: rgba(255,255,255,.012);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 15px;
+      color: #cbd2dc;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255,255,255,.045);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgba(255,255,255,.018); }
+    .mono { font-family: var(--mono); }
+    .cell-primary { color: var(--text); font-weight: 600; }
+    .cell-secondary { display: block; margin-top: 4px; color: var(--faint); font: 500 8px/1.3 var(--mono); }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 23px;
+      padding: 0 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.025);
+      color: var(--muted);
+      font: 600 8px/1 var(--mono);
+      text-transform: uppercase;
+    }
+    .status-pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .status-pill.good { color: var(--green); border-color: rgba(85,230,165,.18); background: rgba(85,230,165,.05); }
+    .status-pill.error { color: var(--red); border-color: rgba(255,116,127,.18); background: rgba(255,116,127,.05); }
+    .status-pill.warn { color: var(--orange); border-color: rgba(255,184,108,.18); background: rgba(255,184,108,.05); }
+    .tag {
+      display: inline-flex;
+      max-width: 180px;
+      align-items: center;
+      height: 23px;
+      padding: 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+      font: 500 8px/1 var(--mono);
+    }
+
+    .empty {
+      min-height: 130px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      color: var(--faint);
+      font: 500 10px/1.5 var(--mono);
+    }
+    .empty.compact { min-height: 70px; }
+    .skeleton {
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255,255,255,.025), rgba(255,255,255,.07), rgba(255,255,255,.025));
+      background-size: 220% 100%;
+      animation: shimmer 1.25s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: -220% 0; } }
+
+    .filter-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      visibility: hidden;
+      opacity: 0;
+      background: rgba(0,0,0,.55);
+      transition: 180ms ease;
+    }
+    .filter-backdrop.open { visibility: visible; opacity: 1; }
+    .filter-drawer {
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: min(420px, 100%);
+      display: flex;
+      flex-direction: column;
+      background: #0b0f15;
+      border-left: 1px solid var(--border-strong);
+      transform: translateX(100%);
+      transition: transform 220ms ease;
+    }
+    .filter-backdrop.open .filter-drawer { transform: translateX(0); }
+    .drawer-head {
+      min-height: 68px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .drawer-head h2 { margin: 0; font-size: 15px; }
+    .drawer-body { flex: 1; overflow: auto; padding: 20px; }
+    .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { display: grid; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { color: var(--faint); font: 600 8px/1 var(--mono); text-transform: uppercase; letter-spacing: .11em; }
+    .field input, .field select {
+      width: 100%;
+      height: 40px;
+      padding: 0 11px;
+      outline: none;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 11px;
+    }
+    .field input:focus, .field select:focus { border-color: rgba(85,230,165,.45); box-shadow: 0 0 0 3px rgba(85,230,165,.07); }
+    .drawer-actions { padding: 16px 20px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .sidebar-backdrop { display: none; }
+
+    @media (max-width: 1320px) {
+      .metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-main { grid-template-columns: minmax(0, 1.35fr) minmax(280px, .75fr); }
+    }
+
+    @media (max-width: 1000px) {
+      :root { --sidebar-width: 220px; }
+      .grid-main, .grid-half { grid-template-columns: 1fr; }
+      .device-layout { min-height: 230px; }
+    }
+
+    @media (max-width: 760px) {
+      .sidebar {
+        width: min(280px, 84vw);
+        transform: translateX(-100%);
+        transition: transform 220ms ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        background: rgba(0,0,0,.55);
+        transition: 180ms ease;
+      }
+      .sidebar-backdrop.open { visibility: visible; opacity: 1; }
+      .main { margin-left: 0; }
+      .topbar { padding: 12px 15px; min-height: 64px; }
+      .menu-button { display: inline-flex; }
+      .page-title p { display: none; }
+      .content { padding: 18px 14px 38px; }
+      .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topbar-actions .button-label { display: none; }
+      .topbar-actions .button { width: 38px; padding: 0; }
+      .range-strip { align-items: flex-start; }
+      .range-tabs { max-width: 100%; overflow-x: auto; }
+      .panel-head { align-items: flex-start; }
+      .panel-tools { flex-wrap: wrap; justify-content: flex-end; }
+      .chart-shell { height: 270px; }
+    }
+
+    @media (max-width: 480px) {
+      .metrics-grid { grid-template-columns: 1fr; }
+      .metric-card { min-height: 112px; }
+      .metric-value { margin-top: 12px; }
+      .device-layout { grid-template-columns: 1fr; justify-items: center; }
+      .legend { width: 100%; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .panel-body { padding: 14px; }
+      .metric-switch button { padding: 0 7px; }
+      .chart-shell { height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <strong>Portfolio Admin</strong>
+          <span>ANALYTICS CONSOLE</span>
+        </div>
+      </div>
+
+      <div class="nav-label">Workspace</div>
+      <nav class="nav" aria-label="Dashboard sections">
+        <a class="nav-link active" href="#overview">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>
+          Overview
+        </a>
+        <a class="nav-link" href="#behavior">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/></svg></span>
+          Behavior
+        </a>
+        <a class="nav-link" href="#heatmap">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/><path d="M7 7h.01M17 17h.01"/></svg></span>
+          Heatmap
+        </a>
+        <a class="nav-link" href="#activity">
+          <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16M4 12h16M4 19h16"/><path d="M8 3v4M15 10v4M11 17v4"/></svg></span>
+          Activity
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="api-card">
+          <div class="api-state"><span class="state-dot" id="apiStateDot"></span><span id="apiStateText">API not configured</span></div>
+          <div class="api-url" id="apiBaseText">/analytics-config.js</div>
+        </div>
+      </div>
+    </aside>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="button icon-only menu-button" id="menuButton" aria-label="Open navigation">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="page-title">
+            <h1>Analytics Overview</h1>
+            <p id="updatedText">Waiting for data</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="button" id="copyButton" title="Copy current filter URL">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+            <span class="button-label">Copy view</span>
+          </button>
+          <button class="button" id="filterButton">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            <span class="button-label">Filters</span>
+          </button>
+          <button class="button primary" id="refreshButton">
+            <svg class="refresh-icon" id="refreshIcon" viewBox="0 0 24 24" fill="none"><path d="M20 11a8 8 0 1 0-2.34 5.66L20 14"/><path d="M20 8v6h-6"/></svg>
+            <span class="button-label">Refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="range-strip" id="overview">
+          <div class="range-tabs" aria-label="Date range">
+            <button class="range-button" data-range="1">24H</button>
+            <button class="range-button active" data-range="7">7D</button>
+            <button class="range-button" data-range="30">30D</button>
+            <button class="range-button" data-range="90">90D</button>
+          </div>
+          <div class="load-status" id="loadStatus">Idle</div>
+        </section>
+
+        <section class="metrics-grid" id="metricsGrid"></section>
+
+        <section class="grid-main" id="behavior">
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Traffic trend</h2>
+                <p id="trendRange">Selected period</p>
+              </div>
+              <div class="metric-switch" id="trendSwitch">
+                <button class="active" data-metric="events">Events</button>
+                <button data-metric="sessions">Sessions</button>
+                <button data-metric="commands">Commands</button>
+                <button data-metric="pageViews">Views</button>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="chart-shell" id="trendChart">
+                <div class="chart-tooltip" id="chartTooltip"><div class="tooltip-label"></div><div class="tooltip-value"></div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Device distribution</h2>
+                <p>Sessions by device class</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="device-layout" id="deviceChart"></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid-half">
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Top commands</h2>
+                <p>Usage and average execution time</p>
+              </div>
+            </div>
+            <div class="panel-body"><div class="rank-list" id="commandRanks"></div></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>Content engagement</h2>
+                <p>Most viewed sections and paths</p>
+              </div>
+              <div class="metric-switch" id="contentSwitch">
+                <button class="active" data-view="sections">Sections</button>
+                <button data-view="paths">Paths</button>
+                <button data-view="timezones">Zones</button>
+              </div>
+            </div>
+            <div class="panel-body"><div class="rank-list" id="contentRanks"></div></div>
+          </article>
+        </section>
+
+        <section class="panel" id="heatmap">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2>Interaction heatmap</h2>
+              <p id="heatmapMeta">Click concentration across the portfolio viewport</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="heatmap-stage"><canvas id="heatmapCanvas" width="1440" height="765"></canvas></div>
+            <div class="heatmap-footer">
+              <span id="heatmapStats">0 clicks · peak 0</span>
+              <div class="heat-scale"><span>Low</span><span class="heat-gradient"></span><span>High</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="activity">
+          <div class="panel-head">
+            <div class="panel-title">
+              <h2>Activity explorer</h2>
+              <p>Sessions, commands, and raw analytics events</p>
+            </div>
+            <div class="tabs" id="tableTabs">
+              <button class="tab-button active" data-tab="sessions">Sessions</button>
+              <button class="tab-button" data-tab="commands">Commands</button>
+              <button class="tab-button" data-tab="events">Events</button>
+            </div>
+          </div>
+
+          <div class="table-panel active" data-panel="sessions">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Session</th><th>Started</th><th>Duration</th><th>Device</th><th>Active / Visible</th><th>Path</th><th>Last command</th></tr></thead>
+                <tbody id="sessionsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-panel" data-panel="commands">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Time</th><th>Command</th><th>Status</th><th>Typing</th><th>Execution</th><th>Output</th></tr></thead>
+                <tbody id="commandsBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="table-panel" data-panel="events">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Time</th><th>Event</th><th>Session</th><th>Label</th><th>Path</th><th>Device</th></tr></thead>
+                <tbody id="eventsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="filter-backdrop" id="filterBackdrop">
+    <aside class="filter-drawer" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+      <div class="drawer-head">
+        <h2 id="filterTitle">Filter analytics</h2>
+        <button class="button icon-only" id="closeFilterButton" aria-label="Close filters">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <form id="filtersForm">
+          <div class="filter-grid">
+            <div class="field"><label for="fromDate">From</label><input id="fromDate" name="from" type="date" /></div>
+            <div class="field"><label for="toDate">To</label><input id="toDate" name="to" type="date" /></div>
+            <div class="field full">
+              <label for="deviceType">Device</label>
+              <select id="deviceType" name="deviceType"><option value="">All devices</option><option value="desktop">Desktop</option><option value="tablet">Tablet</option><option value="mobile">Mobile</option></select>
+            </div>
+            <div class="field full">
+              <label for="eventType">Event type</label>
+              <select id="eventType" name="eventType">
+                <option value="">All events</option><option value="page_view">Page view</option><option value="section_view">Section view</option><option value="command_submitted">Command submitted</option><option value="command_completed">Command completed</option><option value="click">Click</option><option value="heartbeat">Heartbeat</option><option value="session_end">Session end</option>
+              </select>
+            </div>
+            <div class="field full"><label for="path">Path</label><input id="path" name="path" type="text" placeholder="/ or /admin.html" /></div>
+            <div class="field full"><label for="command">Command contains</label><input id="command" name="command" type="text" placeholder="overview, ls, contact..." /></div>
+            <div class="field full"><label for="timezone">Timezone</label><input id="timezone" name="timezone" type="text" placeholder="Asia/Kolkata" /></div>
+          </div>
+        </form>
+      </div>
+      <div class="drawer-actions">
+        <button class="button" id="clearFiltersButton">Reset</button>
+        <button class="button primary" id="applyFiltersButton">Apply filters</button>
+      </div>
+    </aside>
+  </div>
+
+  <script src="/analytics-config.js"></script>
+  <script>
+    const config = window.PORTFOLIO_ANALYTICS_CONFIG || {};
+    const apiBase = String(config.apiBase || "").replace(/\/+$/, "");
+
+    const state = {
+      summary: {},
+      timeseries: [],
+      commands: { topCommands: [], recent: [] },
+      sessions: [],
+      events: [],
+      heatmap: {},
+      trendMetric: "events",
+      contentView: "sections",
+      isLoading: false
+    };
+
+    const $ = id => document.getElementById(id);
+    const elements = {
+      sidebar: $("sidebar"), sidebarBackdrop: $("sidebarBackdrop"), menuButton: $("menuButton"),
+      filterBackdrop: $("filterBackdrop"), filterButton: $("filterButton"), closeFilterButton: $("closeFilterButton"),
+      applyFiltersButton: $("applyFiltersButton"), clearFiltersButton: $("clearFiltersButton"),
+      refreshButton: $("refreshButton"), refreshIcon: $("refreshIcon"), copyButton: $("copyButton"),
+      loadStatus: $("loadStatus"), updatedText: $("updatedText"), apiStateDot: $("apiStateDot"),
+      apiStateText: $("apiStateText"), apiBaseText: $("apiBaseText"), metricsGrid: $("metricsGrid"),
+      trendChart: $("trendChart"), trendRange: $("trendRange"), chartTooltip: $("chartTooltip"),
+      deviceChart: $("deviceChart"), commandRanks: $("commandRanks"), contentRanks: $("contentRanks"),
+      heatmapCanvas: $("heatmapCanvas"), heatmapMeta: $("heatmapMeta"), heatmapStats: $("heatmapStats"),
+      sessionsBody: $("sessionsBody"), commandsBody: $("commandsBody"), eventsBody: $("eventsBody"),
+      filtersForm: $("filtersForm"), fromDate: $("fromDate"), toDate: $("toDate")
+    };
+
+    const defaultTo = new Date();
+    const defaultFrom = new Date();
+    defaultFrom.setDate(defaultTo.getDate() - 6);
+    elements.fromDate.value = toDateInput(defaultFrom);
+    elements.toDate.value = toDateInput(defaultTo);
+
+    configureApiState();
+    bindEvents();
+    renderLoadingState();
+    refresh();
+
+    function configureApiState() {
+      elements.apiBaseText.textContent = apiBase || "/analytics-config.js";
+      if (apiBase) {
+        elements.apiStateDot.classList.add("online");
+        elements.apiStateText.textContent = "API configured";
+      }
+    }
+
+    function bindEvents() {
+      elements.refreshButton.addEventListener("click", refresh);
+      elements.filterButton.addEventListener("click", openFilters);
+      elements.closeFilterButton.addEventListener("click", closeFilters);
+      elements.filterBackdrop.addEventListener("click", event => { if (event.target === elements.filterBackdrop) closeFilters(); });
+      elements.applyFiltersButton.addEventListener("click", () => { closeFilters(); clearActiveRange(); refresh(); });
+      elements.clearFiltersButton.addEventListener("click", () => {
+        elements.filtersForm.reset();
+        elements.fromDate.value = toDateInput(defaultFrom);
+        elements.toDate.value = toDateInput(defaultTo);
+        setActiveRange(7);
+        closeFilters();
+        refresh();
+      });
+      elements.copyButton.addEventListener("click", copyCurrentView);
+      elements.menuButton.addEventListener("click", openSidebar);
+      elements.sidebarBackdrop.addEventListener("click", closeSidebar);
+      document.querySelectorAll(".nav-link").forEach(link => link.addEventListener("click", () => {
+        document.querySelectorAll(".nav-link").forEach(item => item.classList.remove("active"));
+        link.classList.add("active");
+        closeSidebar();
+      }));
+      document.querySelectorAll("[data-range]").forEach(button => button.addEventListener("click", () => {
+        const days = Number(button.dataset.range || 7);
+        const to = new Date();
+        const from = new Date();
+        from.setDate(to.getDate() - (days - 1));
+        elements.fromDate.value = toDateInput(from);
+        elements.toDate.value = toDateInput(to);
+        setActiveRange(days);
+        refresh();
+      }));
+      document.querySelectorAll("#trendSwitch button").forEach(button => button.addEventListener("click", () => {
+        document.querySelectorAll("#trendSwitch button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        state.trendMetric = button.dataset.metric;
+        renderTrendChart(state.timeseries);
+      }));
+      document.querySelectorAll("#contentSwitch button").forEach(button => button.addEventListener("click", () => {
+        document.querySelectorAll("#contentSwitch button").forEach(item => item.classList.remove("active"));
+        button.classList.add("active");
+        state.contentView = button.dataset.view;
+        renderContentRanks();
+      }));
+      document.querySelectorAll("#tableTabs button").forEach(button => button.addEventListener("click", () => {
+        document.querySelectorAll("#tableTabs button").forEach(item => item.classList.remove("active"));
+        document.querySelectorAll(".table-panel").forEach(panel => panel.classList.remove("active"));
+        button.classList.add("active");
+        document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add("active");
+      }));
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") { closeFilters(); closeSidebar(); }
+      });
+      window.addEventListener("resize", debounce(() => {
+        renderTrendChart(state.timeseries);
+        renderHeatmap(state.heatmap);
+      }, 120));
+    }
+
+    async function refresh() {
+      if (!apiBase) {
+        renderNoApi();
+        return;
+      }
+      setLoading(true);
+      const query = buildQuery();
+      const endpoints = ["summary", "timeseries", "commands", "sessions", "heatmap", "events"];
+      try {
+        const [summary, timeseries, commands, sessions, heatmap, events] = await Promise.all(
+          endpoints.map(name => fetchJSON(`${apiBase}/${name}?${query}`))
+        );
+        state.summary = summary.summary || {};
+        state.timeseries = timeseries.points || [];
+        state.commands = commands || { topCommands: [], recent: [] };
+        state.sessions = sessions.sessions || [];
+        state.heatmap = heatmap || {};
+        state.events = events.events || [];
+        renderAll();
+        const total = Number(state.summary.totalEvents || 0).toLocaleString();
+        setStatus(`${total} events loaded`);
+        elements.updatedText.textContent = `Updated ${new Date().toLocaleString()}`;
+      } catch (error) {
+        console.error(error);
+        setStatus(`Failed: ${error.message}`, true);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function renderAll() {
+      renderMetrics(state.summary);
+      renderTrendChart(state.timeseries);
+      renderDeviceChart(state.summary.deviceBreakdown || []);
+      renderRanks(elements.commandRanks, state.commands.topCommands || [], {
+        empty: "No command activity in this range",
+        label: item => item.commandName || item.command || item.label,
+        value: item => Number(item.count || 0),
+        meta: item => `${n(item.count)} runs · ${ms(item.avgDurationMs)}`
+      });
+      renderContentRanks();
+      renderHeatmap(state.heatmap);
+      renderSessions(state.sessions);
+      renderCommands(state.commands.recent || []);
+      renderEvents(state.events);
+    }
+
+    function renderMetrics(summary) {
+      const successRate = Number(summary.commandSuccessRate || 0);
+      const cards = [
+        { label: "Sessions", value: n(summary.totalSessions), sub: `${n(summary.totalEvents)} total events`, color: "var(--green)", glow: "rgba(85,230,165,.18)", icon: iconUsers() },
+        { label: "Page views", value: n(summary.totalPageViews), sub: `${n(summary.totalSectionViews)} section views`, color: "var(--blue)", glow: "rgba(105,168,255,.18)", icon: iconEye() },
+        { label: "Commands", value: n(summary.totalCommands), sub: `${ms(summary.avgCommandMs)} average runtime`, color: "var(--violet)", glow: "rgba(155,140,255,.18)", icon: iconTerminal() },
+        { label: "Avg. session", value: ms(summary.avgSessionMs), sub: `${ms(summary.avgActiveMs)} active time`, color: "var(--orange)", glow: "rgba(255,184,108,.18)", icon: iconClock() },
+        { label: "Typing time", value: ms(summary.avgTypingMs), sub: "Average per command", color: "var(--blue)", glow: "rgba(105,168,255,.16)", icon: iconKeyboard() },
+        { label: "Success rate", value: `${successRate}%`, sub: successRate >= 80 ? "Commands completing normally" : "Review command failures", color: successRate >= 80 ? "var(--green)" : "var(--red)", glow: successRate >= 80 ? "rgba(85,230,165,.18)" : "rgba(255,116,127,.18)", icon: iconCheck() }
+      ];
+      elements.metricsGrid.innerHTML = cards.map(card => `
+        <article class="metric-card" style="--metric-color:${card.color};--metric-glow:${card.glow}">
+          <div class="metric-head"><span class="metric-label">${escapeHTML(card.label)}</span><span class="metric-icon">${card.icon}</span></div>
+          <div class="metric-value">${escapeHTML(card.value)}</div>
+          <div class="metric-sub">${escapeHTML(card.sub)}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderTrendChart(points) {
+      elements.chartTooltip.classList.remove("show");
+      if (!points.length) {
+        elements.trendChart.innerHTML = '<div class="empty">No trend data for the selected filters</div><div class="chart-tooltip" id="chartTooltip"><div class="tooltip-label"></div><div class="tooltip-value"></div></div>';
+        elements.chartTooltip = $("chartTooltip");
+        elements.trendRange.textContent = "No timeseries points";
+        return;
+      }
+
+      const metric = state.trendMetric;
+      const colors = { events: "#55e6a5", sessions: "#69a8ff", commands: "#9b8cff", pageViews: "#ffb86c" };
+      const labelMap = { events: "Events", sessions: "Sessions", commands: "Commands", pageViews: "Page views" };
+      const values = points.map(point => Number(point[metric] || 0));
+      const width = Math.max(760, elements.trendChart.clientWidth || 900);
+      const height = 300;
+      const pad = { left: 42, right: 18, top: 18, bottom: 34 };
+      const innerW = width - pad.left - pad.right;
+      const innerH = height - pad.top - pad.bottom;
+      const maxValue = niceMax(Math.max(...values, 1));
+      const x = index => pad.left + (points.length === 1 ? innerW / 2 : (index / (points.length - 1)) * innerW);
+      const y = value => pad.top + innerH - (value / maxValue) * innerH;
+      const pathPoints = values.map((value, index) => [x(index), y(value)]);
+      const linePath = smoothPath(pathPoints);
+      const areaPath = `${linePath} L ${x(points.length - 1)} ${pad.top + innerH} L ${x(0)} ${pad.top + innerH} Z`;
+      const yTicks = 4;
+      const grid = Array.from({ length: yTicks + 1 }, (_, index) => {
+        const value = (maxValue / yTicks) * (yTicks - index);
+        const py = pad.top + (innerH / yTicks) * index;
+        return `<line class="chart-grid-line" x1="${pad.left}" y1="${py}" x2="${width - pad.right}" y2="${py}"/><text class="chart-axis-label" x="${pad.left - 9}" y="${py + 3}" text-anchor="end">${compact(value)}</text>`;
+      }).join("");
+      const labelEvery = Math.max(1, Math.ceil(points.length / 7));
+      const xLabels = points.map((point, index) => {
+        if (index % labelEvery !== 0 && index !== points.length - 1) return "";
+        return `<text class="chart-axis-label" x="${x(index)}" y="${height - 8}" text-anchor="middle">${escapeHTML(shortBucket(point.bucket))}</text>`;
+      }).join("");
+      const hitAreas = points.map((point, index) => {
+        const hitWidth = points.length === 1 ? innerW : Math.max(18, innerW / Math.max(points.length - 1, 1));
+        return `<rect class="chart-hit" x="${x(index) - hitWidth / 2}" y="${pad.top}" width="${hitWidth}" height="${innerH}" fill="transparent" data-index="${index}"/>`;
+      }).join("");
+
+      elements.trendRange.textContent = `${points[0].bucket || ""} → ${points[points.length - 1].bucket || ""}`;
+      elements.trendChart.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${labelMap[metric]} trend">
+          <defs>
+            <linearGradient id="trendArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${colors[metric]}" stop-opacity=".25"/><stop offset="100%" stop-color="${colors[metric]}" stop-opacity="0"/></linearGradient>
+            <filter id="lineGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          ${grid}
+          ${xLabels}
+          <path d="${areaPath}" fill="url(#trendArea)"/>
+          <path d="${linePath}" fill="none" stroke="${colors[metric]}" stroke-width="2.5" vector-effect="non-scaling-stroke" filter="url(#lineGlow)"/>
+          ${pathPoints.map(([px, py]) => `<circle cx="${px}" cy="${py}" r="3" fill="${colors[metric]}" stroke="#0e1219" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}
+          ${hitAreas}
+        </svg>
+        <div class="chart-tooltip" id="chartTooltip"><div class="tooltip-label"></div><div class="tooltip-value"></div></div>
+      `;
+      elements.chartTooltip = $("chartTooltip");
+      elements.trendChart.querySelectorAll(".chart-hit").forEach(hit => {
+        hit.addEventListener("pointerenter", showChartTooltip);
+        hit.addEventListener("pointermove", showChartTooltip);
+        hit.addEventListener("pointerleave", () => elements.chartTooltip.classList.remove("show"));
+      });
+
+      function showChartTooltip(event) {
+        const index = Number(event.currentTarget.dataset.index);
+        const point = points[index];
+        const rect = elements.trendChart.getBoundingClientRect();
+        const position = (x(index) / width) * rect.width;
+        elements.chartTooltip.querySelector(".tooltip-label").textContent = point.bucket || "";
+        elements.chartTooltip.querySelector(".tooltip-value").textContent = `${n(point[metric])} ${labelMap[metric].toLowerCase()}`;
+        elements.chartTooltip.style.left = `${position}px`;
+        elements.chartTooltip.style.top = `${(y(values[index]) / height) * rect.height}px`;
+        elements.chartTooltip.classList.add("show");
+      }
+    }
+
+    function renderDeviceChart(items) {
+      const normalized = ["desktop", "tablet", "mobile"].map((name, index) => {
+        const match = items.find(item => String(item.label || item.deviceType || "").toLowerCase() === name);
+        return { name, count: Number(match?.count || 0), color: ["var(--green)", "var(--blue)", "var(--violet)"][index] };
+      });
+      const total = normalized.reduce((sum, item) => sum + item.count, 0);
+      if (!total) {
+        elements.deviceChart.innerHTML = '<div class="empty" style="grid-column:1/-1">No device data in this range</div>';
+        return;
+      }
+      const desktopDeg = (normalized[0].count / total) * 360;
+      const tabletDeg = (normalized[1].count / total) * 360;
+      elements.deviceChart.innerHTML = `
+        <div class="donut" style="--desktop:${desktopDeg}deg;--tablet:${tabletDeg}deg">
+          <div class="donut-center"><strong>${n(total)}</strong><span>sessions</span></div>
+        </div>
+        <div class="legend">
+          ${normalized.map(item => `<div class="legend-row"><span class="legend-dot" style="background:${item.color}"></span><span class="legend-name">${item.name}</span><span class="legend-value">${item.count ? Math.round((item.count / total) * 100) : 0}%</span></div>`).join("")}
+        </div>
+      `;
+    }
+
+    function renderContentRanks() {
+      const map = {
+        sections: { items: state.summary.topSections || [], empty: "No section views in this range", label: "views" },
+        paths: { items: state.summary.topPaths || [], empty: "No path data in this range", label: "visits" },
+        timezones: { items: state.summary.timezoneBreakdown || [], empty: "No timezone data in this range", label: "sessions" }
+      };
+      const current = map[state.contentView];
+      renderRanks(elements.contentRanks, current.items, {
+        empty: current.empty,
+        label: item => item.label,
+        value: item => Number(item.count || 0),
+        meta: item => `${n(item.count)} ${current.label}`
+      });
+    }
+
+    function renderRanks(container, items, options) {
+      if (!items.length) {
+        container.innerHTML = `<div class="empty compact">${escapeHTML(options.empty)}</div>`;
+        return;
+      }
+      const visible = items.slice(0, 8);
+      const max = Math.max(...visible.map(options.value), 1);
+      container.innerHTML = visible.map((item, index) => {
+        const label = options.label(item) || "(unknown)";
+        const value = options.value(item);
+        return `
+          <div class="rank-row">
+            <span class="rank-number">${String(index + 1).padStart(2, "0")}</span>
+            <div class="rank-main"><div class="rank-label" title="${escapeHTML(label)}">${escapeHTML(label)}</div><div class="rank-track"><div class="rank-fill" style="width:${Math.max(4, (value / max) * 100)}%"></div></div></div>
+            <span class="rank-value">${escapeHTML(options.meta(item))}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHeatmap(heatmap) {
+      const canvas = elements.heatmapCanvas;
+      if (!canvas) return;
+      const ratio = window.devicePixelRatio || 1;
+      const cssWidth = canvas.clientWidth || 1200;
+      const cssHeight = canvas.clientHeight || 640;
+      canvas.width = Math.max(1, Math.round(cssWidth * ratio));
+      canvas.height = Math.max(1, Math.round(cssHeight * ratio));
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+      const cols = Number(heatmap.cols || 24);
+      const rows = Number(heatmap.rows || 14);
+      const maxCount = Number(heatmap.maxCount || 0);
+      const totalClicks = Number(heatmap.totalClicks || 0);
+      const cellW = cssWidth / cols;
+      const cellH = cssHeight / rows;
+
+      (heatmap.cells || []).forEach(cell => {
+        const intensity = maxCount ? Number(cell.count || 0) / maxCount : 0;
+        const cx = (Number(cell.col || 0) + .5) * cellW;
+        const cy = (Number(cell.row || 0) + .5) * cellH;
+        const radius = Math.max(cellW, cellH) * (1.1 + intensity * 1.2);
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        if (intensity > .72) {
+          gradient.addColorStop(0, `rgba(255,116,127,${.48 + intensity * .38})`);
+          gradient.addColorStop(.28, `rgba(255,184,108,${.28 + intensity * .28})`);
+        } else {
+          gradient.addColorStop(0, `rgba(105,168,255,${.18 + intensity * .62})`);
+          gradient.addColorStop(.35, `rgba(85,230,165,${.1 + intensity * .24})`);
+        }
+        gradient.addColorStop(1, "rgba(105,168,255,0)");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+      });
+
+      elements.heatmapMeta.textContent = `${cols} × ${rows} interaction grid`;
+      elements.heatmapStats.textContent = `${n(totalClicks)} clicks · peak cell ${n(maxCount)}`;
+    }
+
+    function renderSessions(sessions) {
+      if (!sessions.length) {
+        elements.sessionsBody.innerHTML = '<tr><td colspan="7"><div class="empty compact">No sessions found</div></td></tr>';
+        return;
+      }
+      elements.sessionsBody.innerHTML = sessions.map(session => `
+        <tr>
+          <td><span class="cell-primary mono">${escapeHTML(shortId(session.sessionId))}</span><span class="cell-secondary">${n(session.commands)} cmds · ${n(session.views)} views</span></td>
+          <td>${escapeHTML(formatDate(session.startedAt))}</td>
+          <td class="mono">${escapeHTML(ms(session.durationMs))}</td>
+          <td><span class="tag">${escapeHTML(session.deviceType || "unknown")}</span></td>
+          <td class="mono">${escapeHTML(ms(session.activeMs))} / ${escapeHTML(ms(session.visibleMs))}</td>
+          <td><span class="tag" title="${escapeHTML(session.path || "/")}">${escapeHTML(session.path || "/")}</span></td>
+          <td>${escapeHTML(session.lastCommand || "—")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderCommands(commands) {
+      if (!commands.length) {
+        elements.commandsBody.innerHTML = '<tr><td colspan="6"><div class="empty compact">No commands found</div></td></tr>';
+        return;
+      }
+      elements.commandsBody.innerHTML = commands.map(command => `
+        <tr>
+          <td>${escapeHTML(formatDate(command.occurredAt))}</td>
+          <td><span class="cell-primary mono">${escapeHTML(command.command || command.commandName || "—")}</span></td>
+          <td>${renderStatus(command.status)}</td>
+          <td class="mono">${escapeHTML(ms(command.typingDurationMs))}</td>
+          <td class="mono">${escapeHTML(ms(command.commandDurationMs))}</td>
+          <td title="${escapeHTML(command.outputPreview || "")}">${escapeHTML(truncate(command.outputPreview || "—", 90))}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderEvents(events) {
+      if (!events.length) {
+        elements.eventsBody.innerHTML = '<tr><td colspan="6"><div class="empty compact">No events found</div></td></tr>';
+        return;
+      }
+      elements.eventsBody.innerHTML = events.map(event => `
+        <tr>
+          <td>${escapeHTML(formatDate(event.occurredAt))}</td>
+          <td><span class="tag">${escapeHTML(event.eventType || "unknown")}</span></td>
+          <td class="mono">${escapeHTML(shortId(event.sessionId))}</td>
+          <td>${escapeHTML(event.label || event.section || event.command || "—")}</td>
+          <td><span class="tag" title="${escapeHTML(event.path || "/")}">${escapeHTML(event.path || "/")}</span></td>
+          <td>${escapeHTML(event.deviceType || "unknown")}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderStatus(status) {
+      const value = String(status || "unknown").toLowerCase();
+      let klass = "";
+      if (value === "success") klass = "good";
+      else if (value === "error" || value === "not_found" || value === "failed") klass = "error";
+      else if (value === "interrupted" || value === "unknown") klass = "warn";
+      return `<span class="status-pill ${klass}">${escapeHTML(value)}</span>`;
+    }
+
+    function renderLoadingState() {
+      elements.metricsGrid.innerHTML = Array.from({ length: 6 }, () => '<div class="metric-card"><div class="skeleton" style="width:55%;height:11px"></div><div class="skeleton" style="width:70%;height:30px;margin-top:22px"></div><div class="skeleton" style="width:45%;height:8px;margin-top:12px"></div></div>').join("");
+      elements.trendChart.innerHTML = '<div class="skeleton" style="width:100%;height:100%"></div><div class="chart-tooltip" id="chartTooltip"><div class="tooltip-label"></div><div class="tooltip-value"></div></div>';
+      elements.chartTooltip = $("chartTooltip");
+      elements.deviceChart.innerHTML = '<div class="skeleton" style="width:142px;height:142px;border-radius:50%"></div><div style="display:grid;gap:12px;width:100%"><div class="skeleton" style="height:12px"></div><div class="skeleton" style="height:12px"></div><div class="skeleton" style="height:12px"></div></div>';
+      elements.commandRanks.innerHTML = '<div class="skeleton" style="height:210px"></div>';
+      elements.contentRanks.innerHTML = '<div class="skeleton" style="height:210px"></div>';
+      elements.sessionsBody.innerHTML = '<tr><td colspan="7"><div class="empty compact">Loading sessions…</div></td></tr>';
+      elements.commandsBody.innerHTML = '<tr><td colspan="6"><div class="empty compact">Loading commands…</div></td></tr>';
+      elements.eventsBody.innerHTML = '<tr><td colspan="6"><div class="empty compact">Loading events…</div></td></tr>';
+    }
+
+    function renderNoApi() {
+      const message = "Set apiBase in /analytics-config.js";
+      elements.metricsGrid.innerHTML = `<div class="panel" style="grid-column:1/-1"><div class="empty">${message}</div></div>`;
+      elements.trendChart.innerHTML = `<div class="empty">${message}</div><div class="chart-tooltip" id="chartTooltip"><div class="tooltip-label"></div><div class="tooltip-value"></div></div>`;
+      elements.chartTooltip = $("chartTooltip");
+      elements.deviceChart.innerHTML = `<div class="empty" style="grid-column:1/-1">${message}</div>`;
+      elements.commandRanks.innerHTML = '<div class="empty compact">No API configured</div>';
+      elements.contentRanks.innerHTML = '<div class="empty compact">No API configured</div>';
+      renderHeatmap({ cols: 24, rows: 14, totalClicks: 0, maxCount: 0, cells: [] });
+      renderSessions([]); renderCommands([]); renderEvents([]);
+      setStatus(message, true);
+    }
+
+    function setLoading(isLoading) {
+      state.isLoading = isLoading;
+      elements.refreshButton.disabled = isLoading;
+      elements.refreshIcon.classList.toggle("spinning", isLoading);
+      if (isLoading) setStatus("Loading analytics…");
+    }
+
+    function setStatus(text, isError = false) {
+      elements.loadStatus.textContent = text;
+      elements.loadStatus.classList.toggle("error", isError);
+    }
+
+    function buildQuery() {
+      const formData = new FormData(elements.filtersForm);
+      const params = new URLSearchParams();
+      formData.forEach((value, key) => { if (String(value).trim()) params.set(key, String(value).trim()); });
+      params.set("limit", "100");
+      return params.toString();
+    }
+
+    async function fetchJSON(url) {
+      const response = await fetch(url, { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Request failed with ${response.status}`);
+      }
+      return response.json();
+    }
+
+    async function copyCurrentView() {
+      const url = `${location.origin}${location.pathname}?${buildQuery()}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        setStatus("Filter URL copied");
+      } catch {
+        setStatus(url);
+      }
+    }
+
+    function openFilters() { elements.filterBackdrop.classList.add("open"); document.body.style.overflow = "hidden"; }
+    function closeFilters() { elements.filterBackdrop.classList.remove("open"); document.body.style.overflow = ""; }
+    function openSidebar() { elements.sidebar.classList.add("open"); elements.sidebarBackdrop.classList.add("open"); }
+    function closeSidebar() { elements.sidebar.classList.remove("open"); elements.sidebarBackdrop.classList.remove("open"); }
+    function setActiveRange(days) { document.querySelectorAll("[data-range]").forEach(button => button.classList.toggle("active", Number(button.dataset.range) === days)); }
+    function clearActiveRange() { document.querySelectorAll("[data-range]").forEach(button => button.classList.remove("active")); }
+
+    function toDateInput(date) {
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+    function n(value) { return Number(value || 0).toLocaleString(); }
+    function compact(value) { return Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0)); }
+    function ms(value) {
+      const amount = Number(value || 0);
+      if (!amount) return "0s";
+      if (amount < 1000) return `${Math.round(amount)}ms`;
+      const seconds = amount / 1000;
+      if (seconds < 60) return `${seconds.toFixed(seconds >= 10 ? 0 : 1)}s`;
+      const minutes = Math.floor(seconds / 60);
+      const rem = Math.round(seconds % 60);
+      if (minutes < 60) return `${minutes}m ${rem}s`;
+      const hours = Math.floor(minutes / 60);
+      return `${hours}h ${minutes % 60}m`;
+    }
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString([], { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    }
+    function shortId(value) {
+      const text = String(value || "");
+      return text.length > 14 ? `${text.slice(0, 6)}…${text.slice(-5)}` : text || "—";
+    }
+    function shortBucket(value) {
+      const text = String(value || "");
+      const date = new Date(text);
+      if (!Number.isNaN(date.getTime()) && text.length >= 8) return date.toLocaleDateString([], { month: "short", day: "numeric" });
+      return text.length > 10 ? text.slice(5, 10) : text;
+    }
+    function truncate(value, length) { const text = String(value || ""); return text.length > length ? `${text.slice(0, length)}…` : text; }
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function debounce(fn, wait) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), wait); }; }
+    function niceMax(value) {
+      const exponent = Math.floor(Math.log10(value));
+      const fraction = value / Math.pow(10, exponent);
+      const niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+      return niceFraction * Math.pow(10, exponent);
+    }
+    function smoothPath(points) {
+      if (!points.length) return "";
+      if (points.length === 1) return `M ${points[0][0]} ${points[0][1]}`;
+      let path = `M ${points[0][0]} ${points[0][1]}`;
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const current = points[i];
+        const next = points[i + 1];
+        const midX = (current[0] + next[0]) / 2;
+        path += ` C ${midX} ${current[1]}, ${midX} ${next[1]}, ${next[0]} ${next[1]}`;
+      }
+      return path;
+    }
+
+    function iconUsers() { return '<svg viewBox="0 0 24 24" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>'; }
+    function iconEye() { return '<svg viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>'; }
+    function iconTerminal() { return '<svg viewBox="0 0 24 24" fill="none"><path d="m4 17 6-5-6-5M12 19h8"/></svg>'; }
+    function iconClock() { return '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'; }
+    function iconKeyboard() { return '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M18 10h.01M8 14h8"/></svg>'; }
+    function iconCheck() { return '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>'; }
+  </script>
+</body>
+</html>
